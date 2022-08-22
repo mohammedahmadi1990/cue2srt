@@ -1,19 +1,21 @@
 async function loadFile(fileSelector) {
-  const type = fileSelector.files[0].name.slice(-3) === "cue" ? true : false;
+  if (fileSelector.files[0] !== null) {
+    const type = fileSelector.files[0].name.slice(-3) === "cue" ? true : false;
 
-  if (type) {
-    const file = fileSelector.files[0];
-    const reader = new FileReader();
+    if (type) {
+      const file = fileSelector.files[0];
+      const reader = new FileReader();
 
-    reader.onload = (event) => {
-      const file = event.target.result;
-      const allLines = file.split(/\r\n|\n/);
-      download(allLines);
-    };
+      reader.onload = (event) => {
+        const file = event.target.result;
+        const allLines = file.split(/\r\n|\n/);
+        download(allLines);
+      };
 
-    reader.readAsText(file);
-  } else {
-    alert("Error: File not supported!");
+      reader.readAsText(file);
+    } else {
+      alert("Error: File not supported!");
+    }
   }
 }
 
@@ -33,12 +35,45 @@ function download(allLines) {
   }
 }
 
-function convert(cueText) {
-  const srtText = cueText; //.split(/\r?\n/);
+function convert(allLines) {
+  let tracks = allLines.filter(
+    (line) => line.toLowerCase().indexOf("track") >= 0
+  );
+  tracks = tracks.map((line) => line.trim().split(/\s+/)[1]);
 
-  //   // Reading line by line
-  //   allLines.forEach((line) => {
-  //     console.log(line);
-  //   });
-  return srtText[0];
+  let titles = allLines.filter(
+    (line) => line.toLowerCase().indexOf("title") >= 0
+  );
+  titles = titles.map((line) => line.trim().slice(6)?.replaceAll('"', ""));
+
+  let performers = allLines.filter(
+    (line) => line.toLowerCase().indexOf("performer") >= 0
+  );
+  performers = performers.map((line) =>
+    line.trim().slice(10)?.replaceAll('"', "")
+  );
+
+  let start = allLines.filter(
+    (line) => line.toLowerCase().indexOf("index 01") >= 0
+  );
+  start = start.map((line) => line.trim().split(/\s+/)[2]);
+
+  let end = allLines.filter(
+    (line) => line.toLowerCase().indexOf("index 02") >= 0
+  );
+  end = end.map((line) => line.trim().split(/\s+/)[2]);
+
+  if (end.length !== start.length) {
+    start.push(start[start.length - 1]);
+  }
+
+  let srtContent = "";
+  for (let i = 0; i < tracks.length; i++) {
+    srtContent += `${Number(tracks[i])}\n`;
+    srtContent += `${start[i]} --> ${
+      end.length === start.length ? end[i] : start[i + 1]
+    }\n`;
+    srtContent += `${tracks[i]}. ${performers[i]} - ${titles[i]}\n\n`;
+  }
+  return srtContent;
 }
