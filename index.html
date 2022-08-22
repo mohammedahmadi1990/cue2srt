@@ -9,15 +9,15 @@
   <body>
     <div style="text-align: center">
       <h1>CUE TO SRT</h1>
+      <h5
+        onclick="location.reload();"
+        style="cursor: pointer; color: blueviolet"
+      >
+        RELOAD
+      </h5>
       <br />
-      <input
-        id="fileName"
-        placeholder="Choose your file"
-        type="file"
-        onchange="loadFile(this)"
-      />
-      <input hidden type="text" name="cueContent" id="cueContent" />
-      <button onclick="convert()">Convert</button>
+      <input id="fileName" type="file" onchange="loadFile(this)" />
+      <input hidden type="text" id="cueContent" />
     </div>
 
     <script src="app.js"></script>

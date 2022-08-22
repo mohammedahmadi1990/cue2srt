@@ -1,31 +1,44 @@
-// const { readFileSync, promises: fsPromises } = require("fs");
+async function loadFile(fileSelector) {
+  const type = fileSelector.files[0].name.slice(-3) === "cue" ? true : false;
 
-// function readCueFile() {
-// const fileName = document.getElementById("fileName").value;
-//   const type = fileName.slice(-3) === "cue" ? true : false;
-//   let cueFile = "";
-//   if (type) {
-//     cueFile = readTextFile(fileName);
-//     // console.log(cueFile);
-//     //   const contents = readFileSync(fileName, "utf-8");
-//     //   const arr = contents.split(/\r?\n/);
-//     //   console.log(arr);
-//   }
-// }
-
-async function loadFile(fileName) {
-  const type = fileName.slice(-3) === "cue" ? true : false;
   if (type) {
-    document.getElementById("cueContent").value =
-      await fileName.files[0].text();
+    const file = fileSelector.files[0];
+    const reader = new FileReader();
+
+    reader.onload = (event) => {
+      const file = event.target.result;
+      const allLines = file.split(/\r\n|\n/);
+      download(allLines);
+    };
+
+    reader.readAsText(file);
   } else {
-    alert("File not supported!");
+    alert("Error: File not supported!");
   }
 }
 
-function convert() {
-  const cue = document.getElementById("cueContent").value;
-  if (cue !== "") {
-    console.log(cue);
+function download(allLines) {
+  if (allLines !== "") {
+    let finalSRT = convert(allLines);
+    var myBlob = new Blob([finalSRT], { type: "text/plain" });
+    var url = window.URL.createObjectURL(myBlob);
+    var anchor = document.createElement("a");
+    anchor.href = url;
+    const fileFullName = allLines.filter(
+      (line) => line.toLowerCase().indexOf("file") >= 0
+    );
+    const [_, fileName] = fileFullName[0].match(/"((?:\\.|[^"\\])*)"/);
+    anchor.download = `${fileName.split(".")[0]}.srt`;
+    anchor.click();
   }
+}
+
+function convert(cueText) {
+  const srtText = cueText; //.split(/\r?\n/);
+
+  //   // Reading line by line
+  //   allLines.forEach((line) => {
+  //     console.log(line);
+  //   });
+  return srtText[0];
 }
